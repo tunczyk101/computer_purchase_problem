@@ -6,17 +6,15 @@ from typing import Union
 
 
 @dataclass
+# just some parameters for this problem
 class SimulatedAnnealingConfig:
-    initial_temperature: int = 5
-    cooling_step: float = 0.999
-    min_temperature: float = 1e-10
-    escape_random_restart_probability: float = 0.33
-    escape_perturbation_probability: float = 0.33
-    escape_perturbation_size: int = 50
-    escape_reheat_probability: float = 0.33
-    escape_reheat_ratio: float = 0.1
-    local_optimum_moves_threshold: int = 10
-    local_optimum_escapes_max: int = -1  # -1 means "infinity"
+    initial_temperature: int = 5  # temperature at the beginning
+    cooling_step: float = 0.999  # used to calculate temperature in th next step: how much it will drop (^ cooling_time)
+    min_temperature: float = 1e-10  # temperature can't be lower
+    escape_reheat_ratio: float = 0.1  # when we want ro reheat we decrease initial temp - multiply by escape_reheat_ratio
+    local_optimum_moves_threshold: int = (
+        10  # parameter to determine whether we are stuck
+    )
 
 
 class SimulatedAnnealing:
@@ -24,63 +22,63 @@ class SimulatedAnnealing:
     Implementation of the simulated annealing algorithm.
     """
 
-    best_state: Union[list[int], None] = None
-    steps_from_last_state_update: int = 0
-    timer = Timer(60)
+    best_state: Union[list[int], None] = None  # place to store the best state
+    steps_from_last_state_update: int = 0  # parameter to determine whether we are stuck
+    timer = Timer(60)  # to control time
 
     def __init__(self, config: SimulatedAnnealingConfig, problem: Problem):
-        self.config = config
-        self.temperature = self.config.initial_temperature
-        self._local_optimum_escapes = 0
-        self.problem = problem
-        self.cooling_time = 0
+        self.config = config  # parameters
+        self.temperature = self.config.initial_temperature  # current temperature
+        self.problem = problem  # our problem
+        self.cooling_time = 0  # nr of steps since beginning / reheat
 
     def solve(self):
-        self.timer.start_timer()
+        self.timer.start_timer()  # set timer
 
-        solution_state = self.problem.get_random_state()
+        solution_state = self.problem.get_random_state()  # current state
+        self.best_state = (
+            solution_state  # our current state is the best what we have right now
+        )
 
-        while not self.timer.is_timeout():
-            try:
-                next_state = self.next_state(solution_state)
-            except KeyboardInterrupt:
-                solution_state = self.best_state
-                break
-            if next_state:
+        while not self.timer.is_timeout():  # time limit
+            next_state = self.next_state(solution_state)  # get next state
+
+            if next_state:  # if we have new state we can start searching from there
                 solution_state = next_state
             else:
-                solution_state = self.best_state
+                solution_state = self.best_state  # going back to the best one
 
         self.timer.stop_timer()
-        print("SOLUTION:\n", "Best:", self.best_state)
+        print("SOLUTION:\n", "Best:", self.best_state)  # print best state
 
-        return self.best_state
+        return self.best_state  # return the best state
 
     def next_state(self, state: list[int]):
-        if self.best_state is None:
-            self.best_state = state
-
-        if self._is_stuck_in_local_optimum():
-            next_state = self.escape_local_optimum(state, self.best_state)
+        if self._is_stuck_in_local_optimum():  # if we "think" that we are stuck
+            next_state = self.escape_local_optimum(
+                state, self.best_state
+            )  # we are trying to escape (we have 2 options)
         else:
-            next_state = self.find_next_state(state)
+            next_state = self.find_next_state(
+                state
+            )  # else we are just trying to find next state
 
-        if next_state is not None:
-            self._update_state(state, next_state)
+        if next_state is not None:  # if we have our next state
+            self._update_state(state, next_state)  # we can update our information
 
         return next_state
 
     def _update_state(self, state: list[int], new_state: list[int]):
-        if self.best_state is None:
-            self.best_state = new_state
+        # if self.best_state is None:
+        #     self.best_state = new_state
 
-        if self.problem.improvement(new_state, state) > 0:
-            self.steps_from_last_state_update = 0
+        if self.problem.improvement(new_state, state) > 0:  # if there is an improvement
+            self.steps_from_last_state_update = 0  # update to 0
         else:
-            self.steps_from_last_state_update += 1
+            self.steps_from_last_state_update += 1  # update += 1
 
         if self.problem.improvement(new_state, self.best_state) > 0:
-            self.best_state = new_state
+            self.best_state = new_state  # we can update our best state
 
     def find_next_state(self, state: list[int]) -> list[int]:
         # — find random neighbour:
@@ -88,7 +86,7 @@ class SimulatedAnnealing:
         generator = self.problem.get_random_neighbour(state)
         #   [2] use `next` to read a single element from a generator, e.g. `next(generator)`
         neighbour = next(generator)
-        # — if the neighbour is better then mark is as the next state:
+        # — if the neighbour is better than mark is as the next state:
         #   [1] check for improvement
         if self.problem.improvement(neighbour, state) > 0:
             return neighbour

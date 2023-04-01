@@ -98,6 +98,11 @@ class ProblemScale(Problem, ABC):
         return min(value * self.scale_values.get(employee_type), 10)
 
 
+class ProblemNothing(Problem, ABC):
+    def get_value_by_needs(self, value: int, employee_type: str) -> int:
+        return value
+
+
 class Timer:
     def __init__(self, time_limit: float):
         self._time_limit = time_limit
