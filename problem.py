@@ -11,9 +11,7 @@ from typing import TypeVar
 series_type = TypeVar("pandas.core.series.Series")
 
 
-
 class Problem(ABC):
-
     def __init__(self, computers: pd_frame.DataFrame, employees: pd_frame.DataFrame):
         self.employees = employees
         self.computers = computers
@@ -28,16 +26,30 @@ class Problem(ABC):
         shuffle(state)
         return state[:3]
 
-    def calculate_computer_value_for_employee(self, computer: series_type, employee: series_type) -> float:
+    def calculate_computer_value_for_employee(
+        self, computer: series_type, employee: series_type
+    ) -> float:
         result = sum(
-            [employee[col] * self.get_value_by_needs(computer[col], employee["utilization_bin"]) for col in
-             self.parameters[:-1]])
+            [
+                employee[col]
+                * self.get_value_by_needs(computer[col], employee["utilization_bin"])
+                for col in self.parameters[:-1]
+            ]
+        )
         result += employee[self.parameters[-1]] * computer[self.parameters[-1]]
         return result
 
-    def get_best_from_three_for_employee(self, computers_indexes: list[int], employee: series_type) -> float:
-        return max([self.calculate_computer_value_for_employee(self.computers.iloc[c], employee)
-                    for c in computers_indexes])
+    def get_best_from_three_for_employee(
+        self, computers_indexes: list[int], employee: series_type
+    ) -> float:
+        return max(
+            [
+                self.calculate_computer_value_for_employee(
+                    self.computers.iloc[c], employee
+                )
+                for c in computers_indexes
+            ]
+        )
 
     def calculate_state_cost(self, state: list[int]) -> float:
         cost = 0
@@ -46,11 +58,16 @@ class Problem(ABC):
         return cost
 
     def improvement(self, new_state: list[int], old_state: list[int]) -> float:
-        return self.calculate_state_cost(new_state) - self.calculate_state_cost(old_state)
+        return self.calculate_state_cost(new_state) - self.calculate_state_cost(
+            old_state
+        )
 
     def get_random_neighbour(self, state: list[int]) -> Generator:
-        neighbour_states = [(i, j) for i in range(len(state))
-                            for j in [x for x in range(self.computers.shape[0]) if x not in state]]
+        neighbour_states = [
+            (i, j)
+            for i in range(len(state))
+            for j in [x for x in range(self.computers.shape[0]) if x not in state]
+        ]
 
         shuffle(neighbour_states)
 
@@ -81,8 +98,6 @@ class ProblemScale(Problem, ABC):
         return min(value * self.scale_values.get(employee_type), 10)
 
 
-
-
 class Timer:
     def __init__(self, time_limit: float):
         self._time_limit = time_limit
@@ -101,8 +116,6 @@ class Timer:
         self.total_time = self.wall_time()
 
 
-
-
 # import pandas as pd
 #
 # utilization = pd.read_csv("https://raw.githubusercontent.com/shubhamkalra27/dsep-2020/main/datasets/util_b_emp.csv")
@@ -112,5 +125,3 @@ class Timer:
 # employees = utilization.merge(survey, left_on="employee_id", right_on="employee_id")
 # problem = ProblemMax(computers, employees)
 # print(len(problem.get_all_states()))
-
-

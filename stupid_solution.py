@@ -13,6 +13,5 @@ class Stupid:
             if self.problem.improvement(state, best_state) > 0:
                 best_state = state
 
-        print("SOLUTION:\n",
-              "Best:", best_state)
+        print("SOLUTION:\n", "Best:", best_state)
         return best_state

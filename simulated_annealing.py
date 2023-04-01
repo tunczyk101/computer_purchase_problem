@@ -23,6 +23,7 @@ class SimulatedAnnealing:
     """
     Implementation of the simulated annealing algorithm.
     """
+
     best_state: Union[list[int], None] = None
     steps_from_last_state_update: int = 0
     timer = Timer(60)
@@ -51,8 +52,7 @@ class SimulatedAnnealing:
                 solution_state = self.best_state
 
         self.timer.stop_timer()
-        print("SOLUTION:\n",
-              "Best:", self.best_state)
+        print("SOLUTION:\n", "Best:", self.best_state)
 
         return self.best_state
 
@@ -103,7 +103,9 @@ class SimulatedAnnealing:
             # — return the new state
             return neighbour
 
-    def calculate_transition_probability(self, old_state: list[int], new_state: list[int]) -> float:
+    def calculate_transition_probability(
+        self, old_state: list[int], new_state: list[int]
+    ) -> float:
         return exp(self.problem.improvement(new_state, old_state) / self.temperature)
 
     def update_temperature(self):
@@ -111,8 +113,10 @@ class SimulatedAnnealing:
         # — update self.temperature according to the exponential decrease function:
         #   `T_k = T * a^k`
         # - make sure, the temperature can't go below `self.config.min_temperature`!
-        self.temperature = max(self.temperature * (self.config.cooling_step ** self.cooling_time),
-                               self.config.min_temperature)
+        self.temperature = max(
+            self.temperature * (self.config.cooling_step**self.cooling_time),
+            self.config.min_temperature,
+        )
         # - update self.cooling_time
         self.cooling_time += 1
 
@@ -120,7 +124,9 @@ class SimulatedAnnealing:
         # — restore the initial temperature based on config (escape_reheat_ratio * initial_temperature)
         #   [1] initial temperature is stored in `self.config.initial_temperature`
         #   [2] you should decrease it a bit (multiply by `self.config.escape_reheat_ratio`)
-        self.temperature = self.config.initial_temperature * self.config.escape_reheat_ratio
+        self.temperature = (
+            self.config.initial_temperature * self.config.escape_reheat_ratio
+        )
         # — reset cooling schedule (`self.cooling_time`)
         self.cooling_time = 0
         # — reset counter looking for local minima (`self.steps_from_last_state_update`)
@@ -128,7 +134,9 @@ class SimulatedAnnealing:
         # - return the `from_state`
         return from_state
 
-    def escape_local_optimum(self, state: list[int], best_state: list[int]) -> list[int]:
+    def escape_local_optimum(
+        self, state: list[int], best_state: list[int]
+    ) -> list[int]:
         strategies = ["random", "reheat"]
         strategy = strategies[randint(0, len(strategies) - 1)]
         if strategy == "random":
@@ -137,5 +145,7 @@ class SimulatedAnnealing:
             return self.reheat(state)
 
     def _is_stuck_in_local_optimum(self):
-        return self.steps_from_last_state_update >= self.config.local_optimum_moves_threshold
-
+        return (
+            self.steps_from_last_state_update
+            >= self.config.local_optimum_moves_threshold
+        )
