@@ -83,12 +83,37 @@ class Problem(ABC):
 
         return result
 
+    def get_wanted_computers(self, computers_indexes):
+        return {
+            max(
+                [c for c in computers_indexes],
+                key=lambda x: self.calculate_computer_value_for_employee(
+                    self.computers.iloc[x], employee
+                ),
+            ): None
+            for _, employee in self.employees.iterrows()
+        }
+
 
 class ProblemMax(Problem, ABC):
     max_values = {"high": 10, "medium": 7, "low": 3}
 
     def get_value_by_needs(self, value: int, employee_type: str) -> int:
         return min(value, self.max_values.get(employee_type))
+
+
+class ProblemMaxHalf(Problem, ABC):
+    max_values = {"high": 10, "medium": 7.5, "low": 5}
+
+    def get_value_by_needs(self, value: int, employee_type: str) -> int:
+        return min(value, self.max_values.get(employee_type))
+
+
+class ProblemScaleHalf(Problem, ABC):
+    scale_values = {"high": 1, "medium": 4 / 3, "low": 4 / 2}
+
+    def get_value_by_needs(self, value: int, employee_type: str) -> int:
+        return min(value * self.scale_values.get(employee_type), 10)
 
 
 class ProblemScale(Problem, ABC):
@@ -119,14 +144,3 @@ class Timer:
 
     def stop_timer(self):
         self.total_time = self.wall_time()
-
-
-# import pandas as pd
-#
-# utilization = pd.read_csv("https://raw.githubusercontent.com/shubhamkalra27/dsep-2020/main/datasets/util_b_emp.csv")
-# survey = pd.read_csv("https://raw.githubusercontent.com/shubhamkalra27/dsep-2020/main/datasets/survey_emp.csv")
-# computers = pd.read_csv("https://raw.githubusercontent.com/shubhamkalra27/dsep-2020/main/datasets/vendor_options.csv")
-#
-# employees = utilization.merge(survey, left_on="employee_id", right_on="employee_id")
-# problem = ProblemMax(computers, employees)
-# print(len(problem.get_all_states()))

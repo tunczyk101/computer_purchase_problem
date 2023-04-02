@@ -1,7 +1,7 @@
 from problem import Problem
 
 
-class Stupid:
+class Naive:
     def __init__(self, problem: Problem):
         self.problem = problem
 
